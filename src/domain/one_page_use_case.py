@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import override
 
 from src.data.models.error_model import ErrorModel
-from src.data.repository.repository import PHD2025Repository
+from src.data.repository.phd_repository import PHDRepository
 from src.domain.use_case import ViewUseCase
 from src.presentation.view import PageView
 
 
 class OnePageUseCase(ViewUseCase):
-    def __init__(self, repository: PHD2025Repository, day: datetime.date, page: int = 1):
+    def __init__(self, repository: PHDRepository, day: datetime.date, page: int = 1):
         super().__init__(repository)
         self.day = day
         self.page = page

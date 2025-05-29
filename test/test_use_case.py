@@ -1,7 +1,7 @@
 import unittest
 from src.data.data_source.data_source import MockProgramDataSource
 from src.data.parser.rsc_parser import RSCParser
-from src.data.repository.repository import PHD2025Repository
+from src.data.repository.phd_repository import PHDRepository
 from src.domain.use_case import ViewUseCase
 from src.presentation.view import MockView
 from utils import mock_stdout
@@ -10,7 +10,7 @@ from utils import mock_stdout
 class UseCaseTest(unittest.TestCase):
     def setUp(self):
         data_source = MockProgramDataSource.from_file("mock/one_page.txt")
-        repository = PHD2025Repository(parser=RSCParser(), data_source=data_source)
+        repository = PHDRepository(parser=RSCParser(), data_source=data_source)
         self.use_case = ViewUseCase(repository=repository)
 
     def test_add_view(self):

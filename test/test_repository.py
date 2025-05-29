@@ -4,14 +4,14 @@ from src.data.data_source.data_source import MockProgramDataSource
 from src.data.models.report_model import ReportModel
 from src.data.models.response_model import ResponseModel
 from src.data.parser.rsc_parser import RSCParser
-from src.data.repository.repository import PHD2025Repository
+from src.data.repository.phd_repository import PHDRepository
 
 
 class RepositoryTest(unittest.TestCase):
     def setUp(self):
         parser = RSCParser()
         data_source = MockProgramDataSource.from_file("mock/one_page.txt")
-        self.repo = PHD2025Repository(parser=parser, data_source=data_source)
+        self.repo = PHDRepository(parser=parser, data_source=data_source)
 
     def test_fetch_one_page(self):
         response = self.repo.fetch_page(day=datetime.today(), page=1)
