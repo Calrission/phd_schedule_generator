@@ -53,3 +53,11 @@ class ReportModel:
     @property
     def time(self):
         return f"{time2str(self.start_date.time())}-{time2str(self.end_date.time())}"
+
+    @property
+    def start_time(self):
+        return self.start_date.time()
+
+    @property
+    def end_time(self):
+        return self.end_date.time()

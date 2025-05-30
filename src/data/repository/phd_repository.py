@@ -1,9 +1,11 @@
 import abc
 import datetime
+from json import loads
 from typing import override
 
 import loguru
 from requests import RequestException
+
 from src.data.data_source.data_source import DataSource
 from src.data.models.error_model import ErrorModel
 from src.data.models.report_model import ReportModel
@@ -61,3 +63,25 @@ class PHDRepository(Repository):
             return ErrorModel(
                 "Unknown error"
             )
+
+
+class MockRepository(Repository):
+    def __init__(self, mock_response: ResponseModel | ErrorModel, mock_day: list[ReportModel] | ErrorModel):
+        self.mock_response = mock_response
+        self.mock_day = mock_day
+
+    @staticmethod
+    def from_day_file(day_file_path: str) -> 'MockRepository':
+        with open(day_file_path, mode='r', encoding="utf-8") as day_file:
+            return MockRepository(
+                mock_day=[ReportModel.from_json(i) for i in loads(day_file.read())],
+                mock_response=ErrorModel(
+                    "This mock repository for only mock fetch_day. Use MockProgramDataSource to mock fetch_page."
+                )
+            )
+
+    def fetch_page(self, day: datetime.date, page: int) -> ResponseModel | ErrorModel:
+        return self.mock_response
+
+    def fetch_day(self, day: datetime.date) -> list[ReportModel] | ErrorModel:
+        return self.mock_day

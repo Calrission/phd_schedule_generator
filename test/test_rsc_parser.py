@@ -5,7 +5,7 @@ from src.data.parser.rsc_parser import RSCParser
 class RSCParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = RSCParser()
-        with open("mock/one_page.txt", "r", encoding="utf-8") as f:
+        with open("mock/response_one_page.txt", "r", encoding="utf-8") as f:
             self.mock_day_page = f.read()
 
     def test_simple_parse(self):

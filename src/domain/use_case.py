@@ -1,8 +1,8 @@
-from src.data.repository.phd_repository import PHDRepository
+from src.data.repository.phd_repository import Repository
 
 
 class ViewUseCase:
-    def __init__(self, repository: PHDRepository):
+    def __init__(self, repository: Repository):
         self._repository = repository
         self._views = []
 

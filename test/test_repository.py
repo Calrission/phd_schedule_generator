@@ -10,7 +10,7 @@ from src.data.repository.phd_repository import PHDRepository
 class RepositoryTest(unittest.TestCase):
     def setUp(self):
         parser = RSCParser()
-        data_source = MockProgramDataSource.from_file("mock/one_page.txt")
+        data_source = MockProgramDataSource.from_file("mock/response_one_page.txt")
         self.repo = PHDRepository(parser=parser, data_source=data_source)
 
     def test_fetch_one_page(self):

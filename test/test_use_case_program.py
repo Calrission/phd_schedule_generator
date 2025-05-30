@@ -11,7 +11,7 @@ from utils import mock_stdout
 
 class DayUseCaseTest(unittest.TestCase):
     def setUp(self):
-        data_source = MockProgramDataSource.from_file("mock/one_page.txt")
+        data_source = MockProgramDataSource.from_file("mock/response_one_page.txt")
         repository = PHDRepository(parser=RSCParser(), data_source=data_source)
         self.use_case = ProgramDayUseCase(repository=repository, day=datetime.datetime.today())
 

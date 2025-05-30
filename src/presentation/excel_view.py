@@ -1,13 +1,16 @@
 import datetime
 import enum
+from math import ceil
 from typing import override
 
 from loguru import logger
+from openpyxl.cell import MergedCell
 from openpyxl.styles import Alignment, Font
+from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 
 from src.core.alias import ProgramDay, ProgramPHD
-from src.core.datetime_utils import date2str
+from src.core.datetime_utils import date2str, time2str, addDelta2Time
 from src.domain.file_output_name_use_case import FileOutputNameUseCase
 from src.presentation.view import PHDProgramView
 
@@ -26,9 +29,9 @@ class _DayPage:
         self._wb = workbook
         self._day = day
         self._program_day = program
-        self._page.title = title_page
         if create_new_list:
             self._create_new_list()
+        self._page.title = title_page
 
     @property
     def _page(self):
@@ -133,6 +136,69 @@ class _SimpleDayPage(_DayPage):
         fill_header_column(_SimpleDayPageColumn.broadcast.value, "Трансляция", 15)
 
 
+class _TimeDayPage(_DayPage):
+
+    @override
+    def present(self):
+        self.__fill_time_column()
+        self.__fill_content()
+
+    MIN_TIME = datetime.time(hour=9)
+    MAX_TIME = datetime.time(hour=23, minute=59)
+    MINUTES_PER_ROW = 5
+
+    def __init__(self, day: datetime.date, title_page: str, workbook: Workbook, program: ProgramDay):
+        super().__init__(title_page, workbook, day, program)
+        self._max_total_minute = self.MAX_TIME.minute + self.MAX_TIME.hour * 60
+        self._min_total_minute = self.MIN_TIME.minute + self.MIN_TIME.hour * 60
+
+    def __calc_count_rows(self) -> int:
+        total = self._max_total_minute - self._min_total_minute
+        return ceil(total / self.MINUTES_PER_ROW)
+
+    def __fill_time_column(self):
+        time = self.MIN_TIME
+        count_rows = self.__calc_count_rows()
+        for cells in self._page.iter_rows(min_row=1, max_row=count_rows, max_col=0):
+            cell = cells[0]
+            cell.value = time2str(time)
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            time = addDelta2Time(time, datetime.timedelta(minutes=self.MINUTES_PER_ROW))
+
+    def __find_index_row_by_time(self, time: datetime.time) -> int:
+        total_minute = time.minute + time.hour * 60 - self._min_total_minute
+        if (total_minute % self.MINUTES_PER_ROW) != 0:
+            raise IndexError(f"Time ({time}) should be even {self.MINUTES_PER_ROW}")
+        return total_minute // self.MINUTES_PER_ROW + 1
+
+    def __find_near_free_column_by_row(self, index_row: int) -> int:
+        for cells in self._page.iter_rows(min_row=index_row, max_row=index_row):
+            for cell in cells:
+                if cell.value is None and not isinstance(cell, MergedCell):
+                    return cell.column
+        return self._page.max_column + 1
+
+    def __fill_content(self):
+        for report in self._program_day:
+            try:
+                start_index_row = self.__find_index_row_by_time(report.start_time)
+                end_index_row = self.__find_index_row_by_time(report.end_time)
+                index_column = self.__find_near_free_column_by_row(start_index_row)
+                cell = self._page.cell(row=start_index_row, column=index_column)
+                cell.value = f"{report.time}\n{report.title}\n{report.map_object.title}"
+                self._page.merge_cells(
+                    start_row=start_index_row, end_row=end_index_row,
+                    start_column=index_column, end_column=index_column
+                )
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrapText=True)
+                column_letter = get_column_letter(index_column)
+                self._page.column_dimensions[column_letter].width = 15
+                for i in range(start_index_row, end_index_row+1):
+                    self._page.row_dimensions[i].height = 30
+            except IndexError as e:
+                logger.error(e)
+
+
 class ExcelPHDProgramView(PHDProgramView):
     def __init__(self, file_output_use_case: FileOutputNameUseCase):
         super().__init__()
@@ -155,6 +221,13 @@ class ExcelPHDProgramView(PHDProgramView):
                 create_new_list=i != len(self._phd_program) - 1
             )
             simple_page.present()
+            time_page = _TimeDayPage(
+                title_page=f"{date2str(day)} (по времени)",
+                workbook=self._wb,
+                program=program_day,
+                day=day,
+            )
+            time_page.present()
         self.__save()
 
     def __save(self):

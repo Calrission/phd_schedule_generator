@@ -5,13 +5,13 @@ import loguru
 
 from src.core.datetime_utils import date2str
 from src.data.models.error_model import ErrorModel
-from src.data.repository.phd_repository import PHDRepository
+from src.data.repository.phd_repository import Repository
 from src.domain.use_case import ViewUseCase
 from src.presentation.view import PHDProgramView
 
 
 class PHDProgramUseCase(ViewUseCase):
-    def __init__(self, repository: PHDRepository, days: list[datetime.date]):
+    def __init__(self, repository: Repository, days: list[datetime.date]):
         super().__init__(repository)
         self._phd_program = None
         self._days = days
